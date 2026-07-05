@@ -21,12 +21,6 @@ async def orders(callback: CallbackQuery, api: RavenAPI, bot_session: BotSession
     await respond(callback, orders_text(rows, t), orders_keyboard(t))
 
 
-@router.callback_query(F.data == cb.WALLET)
-async def wallet(callback: CallbackQuery, api: RavenAPI, bot_session: BotSession, t) -> None:
-    summary = await api.wallet(bot_session.access_token)
-    await respond(callback, wallet_text(summary, t), single_back_keyboard(t))
-
-
 @router.callback_query(F.data == cb.REFERRAL)
 async def referral(callback: CallbackQuery, api: RavenAPI, bot_session: BotSession, t) -> None:
     stats = await api.referral_stats(bot_session.access_token, settings.bot_public_username)

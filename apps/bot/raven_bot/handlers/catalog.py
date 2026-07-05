@@ -14,7 +14,6 @@ from raven_bot.ui.keyboards import (
     catalog_keyboard,
     checkout_keyboard,
     product_keyboard,
-    single_back_keyboard,
 )
 
 router = Router()
