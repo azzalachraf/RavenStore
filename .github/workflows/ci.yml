@@ -34,6 +34,7 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgresql+asyncpg://ravenstore:ci-${{ github.run_id }}-${{ github.run_attempt }}@localhost:5432/ravenstore_test
+      DATABASE_DIRECT_URL: postgresql+asyncpg://ravenstore:ci-${{ github.run_id }}-${{ github.run_attempt }}@localhost:5432/ravenstore_test
       REDIS_URL: redis://localhost:6379/15
       RUN_INTEGRATION_TESTS: "1"
       JWT_SECRET_KEY: ci-secret-key-must-be-at-least-32-chars-long
@@ -49,8 +50,8 @@ jobs:
       - name: Install API
         working-directory: apps/api
         run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          python -m pip install --upgrade pip --quiet
+          pip install -e ".[dev]" --quiet
       - name: Migrate database
         working-directory: apps/api
         run: alembic upgrade head
@@ -64,7 +65,7 @@ jobs:
       - name: Install and validate bot
         working-directory: apps/bot
         run: |
-          pip install -e ".[dev]"
+          pip install -e ".[dev]" --quiet
           ruff check raven_bot tests
           pytest -q
 
