@@ -1,0 +1,70 @@
+export type Locale = "en" | "ar";
+
+export const uiMessages: Record<Locale, Record<string, string>> = {
+  en: {
+    "nav.home": "Home", "nav.store": "Store", "nav.orders": "Orders", "nav.support": "Support", "nav.account": "Account",
+    "nav.telegram": "Open Telegram", "nav.search": "Search products", "nav.language": "Language",
+    "hero.eyebrow": "Telegram-first digital marketplace", "hero.title": "Premium subscriptions. Delivered where you already are.",
+    "hero.body": "Shop trusted AI, design, VPN, streaming and developer subscriptions through RavenStore. The fastest experience lives in Telegram; the web stays here when you need it.",
+    "hero.primary": "Browse Store", "hero.secondary": "Shop in Telegram", "hero.trust": "Encrypted payments · Automatic delivery · Human support",
+    "section.featured": "Featured products", "section.featuredBody": "Curated subscriptions with live pricing and availability from the RavenStore API.",
+    "section.categories": "Browse by category", "section.why": "Why RavenStore", "section.stats": "Built for speed and trust",
+    "section.reviews": "Customer reviews", "section.faq": "Frequently asked questions",
+    "why.fast": "Telegram-fast delivery", "why.fastBody": "Automatic fulfillment begins as soon as payment is verified.",
+    "why.secure": "Secure by design", "why.secureBody": "Payment references and delivery credentials stay encrypted.",
+    "why.support": "Support that follows through", "why.supportBody": "Create and track tickets from Telegram or the customer portal.",
+    "store.title": "Store", "store.body": "Live catalog, pricing and stock. No stale storefront data.", "store.search": "Search subscriptions...",
+    "store.all": "All", "store.featured": "Featured", "store.popular": "Popular", "store.newest": "Newest", "store.sort": "Sort",
+    "store.empty": "No products match your filters.", "store.loading": "Loading catalog", "product.buy": "Buy now", "product.details": "View details",
+    "product.duration": "Duration", "product.warranty": "Warranty", "product.stock": "Stock", "product.delivery": "Delivery",
+    "product.description": "Description", "product.specifications": "Specifications", "product.reviews": "Reviews", "product.recommendations": "You may also like",
+    "product.available": "Available", "product.unavailable": "Unavailable", "product.instant": "Instant", "product.days": "{days} days",
+    "checkout.title": "Secure checkout", "checkout.review": "Review order", "checkout.method": "Payment method", "checkout.verify": "Verify payment",
+    "checkout.binance": "Binance Pay", "checkout.trc20": "USDT TRC20", "checkout.bep20": "USDT BEP20",
+    "checkout.create": "Create order", "checkout.instructions": "Send exactly {amount} {currency}", "checkout.address": "Payment address",
+    "checkout.paymentId": "Binance Order ID or transaction hash", "checkout.submit": "Submit for verification", "checkout.queued": "Verification queued. Delivery begins automatically after confirmation.",
+    "auth.signIn": "Sign in", "auth.create": "Create account", "auth.email": "Email", "auth.password": "Password", "auth.name": "Display name", "auth.signOut": "Sign out",
+    "account.title": "Customer portal", "account.profile": "Profile", "account.orders": "Purchase history", "account.active": "Active subscriptions",
+    "account.pending": "Pending", "account.completed": "Completed", "account.referrals": "Referrals", "account.wallet": "Wallet", "account.notifications": "Notifications",
+    "account.settings": "Settings", "account.support": "Support tickets", "account.noOrders": "No orders yet.", "account.futureBalance": "Future balance support",
+    "support.subject": "Subject", "support.message": "Message", "support.create": "Create ticket", "support.created": "Support ticket created.",
+    "common.viewAll": "View all", "common.retry": "Retry", "common.close": "Close", "common.continue": "Continue", "common.back": "Back",
+    "common.loading": "Loading...", "common.apiOffline": "RavenStore API is temporarily unavailable.",
+    "footer.copy": "Premium digital subscriptions, built around Telegram.", "footer.rights": "All rights reserved."
+  },
+  ar: {
+    "nav.home": "الرئيسية", "nav.store": "المتجر", "nav.orders": "الطلبات", "nav.support": "الدعم", "nav.account": "الحساب",
+    "nav.telegram": "فتح تيليجرام", "nav.search": "بحث عن المنتجات", "nav.language": "اللغة",
+    "hero.eyebrow": "سوق رقمي يعتمد على تيليجرام", "hero.title": "اشتراكات مميزة. تصلك حيث تتواجد.",
+    "hero.body": "تسوق اشتراكات الذكاء الاصطناعي والتصميم وVPN والبث وأدوات المطورين بثقة. التجربة الأسرع داخل تيليجرام، والموقع متاح عند الحاجة.",
+    "hero.primary": "تصفح المتجر", "hero.secondary": "تسوق عبر تيليجرام", "hero.trust": "دفع مشفر · تسليم تلقائي · دعم بشري",
+    "section.featured": "المنتجات المميزة", "section.featuredBody": "اشتراكات مختارة بأسعار وتوفر مباشر من واجهة RavenStore.",
+    "section.categories": "تصفح حسب التصنيف", "section.why": "لماذا RavenStore", "section.stats": "مصمم للسرعة والثقة",
+    "section.reviews": "آراء العملاء", "section.faq": "الأسئلة الشائعة",
+    "why.fast": "تسليم بسرعة تيليجرام", "why.fastBody": "يبدأ التسليم التلقائي بمجرد التحقق من الدفع.",
+    "why.secure": "أمان من الأساس", "why.secureBody": "مراجع الدفع وبيانات التسليم تبقى مشفرة.",
+    "why.support": "دعم يتابع معك", "why.supportBody": "أنشئ وتابع التذاكر من تيليجرام أو بوابة العميل.",
+    "store.title": "المتجر", "store.body": "كتالوج وأسعار ومخزون مباشر دون بيانات قديمة.", "store.search": "ابحث عن الاشتراكات...",
+    "store.all": "الكل", "store.featured": "المميز", "store.popular": "الأكثر طلبا", "store.newest": "الأحدث", "store.sort": "الترتيب",
+    "store.empty": "لا توجد منتجات مطابقة.", "store.loading": "جار تحميل المتجر", "product.buy": "اشتر الآن", "product.details": "عرض التفاصيل",
+    "product.duration": "المدة", "product.warranty": "الضمان", "product.stock": "المخزون", "product.delivery": "التسليم",
+    "product.description": "الوصف", "product.specifications": "المواصفات", "product.reviews": "التقييمات", "product.recommendations": "قد يعجبك أيضا",
+    "product.available": "متاح", "product.unavailable": "غير متاح", "product.instant": "فوري", "product.days": "{days} يوم",
+    "checkout.title": "دفع آمن", "checkout.review": "مراجعة الطلب", "checkout.method": "طريقة الدفع", "checkout.verify": "التحقق من الدفع",
+    "checkout.binance": "Binance Pay", "checkout.trc20": "USDT TRC20", "checkout.bep20": "USDT BEP20",
+    "checkout.create": "إنشاء الطلب", "checkout.instructions": "أرسل بالضبط {amount} {currency}", "checkout.address": "عنوان الدفع",
+    "checkout.paymentId": "Binance Order ID أو هاش المعاملة", "checkout.submit": "إرسال للتحقق", "checkout.queued": "تمت جدولة التحقق. يبدأ التسليم تلقائيا بعد التأكيد.",
+    "auth.signIn": "تسجيل الدخول", "auth.create": "إنشاء حساب", "auth.email": "البريد الإلكتروني", "auth.password": "كلمة المرور", "auth.name": "الاسم", "auth.signOut": "تسجيل الخروج",
+    "account.title": "بوابة العميل", "account.profile": "الملف الشخصي", "account.orders": "سجل المشتريات", "account.active": "الاشتراكات النشطة",
+    "account.pending": "قيد الانتظار", "account.completed": "مكتملة", "account.referrals": "الإحالات", "account.wallet": "المحفظة", "account.notifications": "الإشعارات",
+    "account.settings": "الإعدادات", "account.support": "تذاكر الدعم", "account.noOrders": "لا توجد طلبات بعد.", "account.futureBalance": "دعم الرصيد المستقبلي",
+    "support.subject": "الموضوع", "support.message": "الرسالة", "support.create": "إنشاء تذكرة", "support.created": "تم إنشاء تذكرة الدعم.",
+    "common.viewAll": "عرض الكل", "common.retry": "إعادة المحاولة", "common.close": "إغلاق", "common.continue": "متابعة", "common.back": "رجوع",
+    "common.loading": "جار التحميل...", "common.apiOffline": "واجهة RavenStore غير متاحة مؤقتا.",
+    "footer.copy": "اشتراكات رقمية مميزة تتمحور حول تيليجرام.", "footer.rights": "جميع الحقوق محفوظة."
+  }
+};
+
+export function formatMessage(template: string, params?: Record<string, string | number>) {
+  return Object.entries(params ?? {}).reduce((value, [key, replacement]) => value.replaceAll(`{${key}}`, String(replacement)), template);
+}

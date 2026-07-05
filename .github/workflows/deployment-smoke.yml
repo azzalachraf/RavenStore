@@ -1,0 +1,32 @@
+name: Production Smoke Check
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["RavenStore Production Gate"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for provider deployments
+        run: sleep 90
+      - name: Verify API and clients
+        env:
+          API_URL: ${{ secrets.PRODUCTION_API_URL }}
+          BOT_URL: ${{ secrets.PRODUCTION_BOT_URL }}
+          ADMIN_URL: ${{ secrets.PRODUCTION_ADMIN_URL }}
+          STOREFRONT_URL: ${{ secrets.PRODUCTION_STOREFRONT_URL }}
+        run: |
+          test -n "$API_URL" && test -n "$BOT_URL" && test -n "$ADMIN_URL" && test -n "$STOREFRONT_URL"
+          curl --fail --retry 12 --retry-all-errors --retry-delay 10 "$API_URL/health/ready"
+          curl --fail --retry 12 --retry-all-errors --retry-delay 10 "$BOT_URL/health/ready"
+          curl --fail --retry 12 --retry-all-errors --retry-delay 10 --head "$ADMIN_URL"
+          curl --fail --retry 12 --retry-all-errors --retry-delay 10 --head "$STOREFRONT_URL"

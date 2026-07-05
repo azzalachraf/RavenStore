@@ -1,0 +1,3 @@
+"use client";
+import { motion, useReducedMotion } from "framer-motion";
+export function Progress({ value, label }: { value: number; label?: string }) { const reduced = useReducedMotion(); const width = `${Math.min(100, Math.max(0, value))}%`; return <div>{label ? <div className="mb-2 flex justify-between text-xs text-muted-foreground"><span>{label}</span><span>{Math.round(value)}%</span></div> : null}<div className="h-1.5 overflow-hidden rounded-full bg-white/[.07]"><motion.div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400" initial={reduced ? { width } : { width: 0 }} animate={{ width }} transition={{ duration: .5, ease: [.22,1,.36,1] }} /></div></div>; }

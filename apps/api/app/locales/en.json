@@ -1,0 +1,55 @@
+{
+  "auth.invalid_token": "Invalid authentication token.",
+  "auth.invalid_token_type": "Invalid token type.",
+  "auth.invalid_api_key": "Invalid API key.",
+  "auth.inactive_user": "User is inactive.",
+  "auth.required": "Authentication is required.",
+  "auth.forbidden": "You do not have permission to perform this action.",
+  "auth.invalid_credentials": "Invalid credentials.",
+  "validation.invalid_request": "The request is invalid.",
+  "database.constraint_violation": "The requested operation violates a database constraint.",
+  "products.not_found": "Product was not found.",
+  "variants.not_found": "Product variant was not found.",
+  "orders.not_found": "Order was not found.",
+  "payments.unsupported_method": "Unsupported payment method.",
+  "payments.not_found": "Payment was not found.",
+  "payments.verification_queued": "Payment verification has been queued.",
+  "delivery.queued": "Delivery was queued.",
+  "delivery.completed": "Delivery completed.",
+  "delivery.failed": "Delivery failed.",
+  "support.ticket_created": "Support ticket created."
+, "notifications.payment_confirmed.title": "Payment confirmed"
+, "notifications.payment_confirmed.body": "Your payment was verified and fulfillment has started."
+, "notifications.payment_failed.title": "Payment not completed"
+, "notifications.payment_failed.body": "Your payment could not be verified. Open the order for details."
+, "notifications.delivery_completed.title": "Your purchase is ready"
+, "notifications.delivery_completed.body": "Delivery is complete. Open your order to view it securely."
+, "notifications.order_completed.title": "Order completed"
+, "notifications.order_completed.body": "All items in your order have been delivered."
+, "notifications.payment_review.title": "Payment needs review"
+, "notifications.payment_review.body": "A payment was moved to the manual review queue."
+, "notifications.admin_payment_failed.title": "Payment verification failed"
+, "notifications.admin_payment_failed.body": "A payment exhausted automated verification or expired."
+, "notifications.delivery_failed.title": "Delivery needs attention"
+, "notifications.delivery_failed.body": "Automated fulfillment exhausted its retry policy."
+, "notifications.low_stock.title": "Low inventory"
+, "notifications.low_stock.body": "An inventory pool reached its configured low-stock threshold."
+, "notifications.order_created.title": "Order confirmed"
+, "notifications.order_created.body": "Your order was created and is awaiting payment."
+, "notifications.support_reply.title": "Support replied"
+, "notifications.support_reply.body": "A new reply is available in your support ticket."
+, "notifications.referral_reward.title": "Referral reward received"
+, "notifications.referral_reward.body": "A referral reward was added to your account."
+, "notifications.new_order.title": "New order"
+, "notifications.new_order.body": "A customer placed a new order."
+, "notifications.support_request.title": "New support request"
+, "notifications.support_request.body": "A customer opened a support ticket."
+, "notifications.system_alert.title": "System alert"
+, "notifications.system_alert.body": "An automation event requires operator attention."
+, "product.stock_unlimited": "Always available"
+, "categories.demo.name": "Demo Digital Tools"
+, "categories.demo.description": "A launch-ready demonstration catalog"
+, "products.demo_license.name": "RavenStore Demo License"
+, "products.demo_license.description": "A fully automated demo product for validating checkout and secure delivery."
+, "products.demo_license.variant": "30-day demo license"
+}

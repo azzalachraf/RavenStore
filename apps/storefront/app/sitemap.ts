@@ -1,0 +1,3 @@
+import type { MetadataRoute } from "next";
+import { api } from "@/lib/api";
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> { const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001"; const products = await api.products("limit=100&offset=0", 60).catch(() => []); return [{ url: site, changeFrequency: "daily", priority: 1 }, { url: `${site}/store`, changeFrequency: "hourly", priority: .9 }, ...products.map((product) => ({ url: `${site}/products/${product.slug}`, lastModified: product.created_at ? new Date(product.created_at) : undefined, changeFrequency: "daily" as const, priority: .8 }))]; }

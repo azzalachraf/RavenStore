@@ -1,0 +1,39 @@
+# Environment and credentials
+.env
+.env.*
+!.env.example
+!**/.env.example
+*.pem
+*.key
+*.p12
+credentials.json
+service-account*.json
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+*.egg-info/
+
+# Node / Next.js
+node_modules/
+.next/
+.vercel/
+*.tsbuildinfo
+npm-debug.log*
+
+# Runtime data
+backups/
+uploads/
+*.dump
+*.dump.enc
+*.log
+
+# IDE and OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,97 @@
+previews:
+  generation: manual
+  expireAfterDays: 3
+
+services:
+  - type: keyvalue
+    name: ravenstore-redis
+    region: frankfurt
+    plan: pro
+    ipAllowList: []
+    maxmemoryPolicy: noeviction
+    persistenceMode: journal-snapshot
+
+  - type: web
+    name: ravenstore-api
+    runtime: docker
+    region: frankfurt
+    plan: standard
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: ./apps/api
+    dockerCommand: uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips '*'
+    preDeployCommand: alembic upgrade head && python -m app.seed
+    healthCheckPath: /health/ready
+    autoDeployTrigger: checksPass
+    maxShutdownDelaySeconds: 120
+    buildFilter:
+      paths:
+        - apps/api/**
+        - render.yaml
+      ignoredPaths:
+        - apps/api/tests/**
+    envVars:
+      - fromGroup: ravenstore-backend-secrets
+      - fromGroup: ravenstore-telegram-bridge
+      - key: ENVIRONMENT
+        value: production
+      - key: PORT
+        value: 8000
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: ravenstore-redis
+          property: connectionString
+
+  - type: worker
+    name: ravenstore-workers
+    runtime: docker
+    region: frankfurt
+    plan: standard
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: ./apps/api
+    dockerCommand: python -m app.workers.runner
+    autoDeployTrigger: checksPass
+    maxShutdownDelaySeconds: 180
+    buildFilter:
+      paths:
+        - apps/api/**
+        - render.yaml
+    envVars:
+      - fromGroup: ravenstore-backend-secrets
+      - fromGroup: ravenstore-telegram-bridge
+      - key: ENVIRONMENT
+        value: production
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: ravenstore-redis
+          property: connectionString
+
+  - type: web
+    name: ravenstore-telegram-bot
+    runtime: docker
+    region: frankfurt
+    plan: standard
+    dockerfilePath: ./apps/bot/Dockerfile
+    dockerContext: ./apps/bot
+    healthCheckPath: /health/ready
+    autoDeployTrigger: checksPass
+    maxShutdownDelaySeconds: 120
+    buildFilter:
+      paths:
+        - apps/bot/**
+        - render.yaml
+    envVars:
+      - fromGroup: ravenstore-bot-secrets
+      - fromGroup: ravenstore-telegram-bridge
+      - key: BOT_MODE
+        value: webhook
+      - key: WEB_SERVER_HOST
+        value: 0.0.0.0
+      - key: WEB_SERVER_PORT
+        value: 8080
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: ravenstore-redis
+          property: connectionString

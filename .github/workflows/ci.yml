@@ -1,0 +1,90 @@
+name: RavenStore Production Gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  api-and-bot:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ravenstore
+          POSTGRES_PASSWORD: ci-${{ github.run_id }}-${{ github.run_attempt }}
+          POSTGRES_DB: ravenstore_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ravenstore"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://ravenstore:ci-${{ github.run_id }}-${{ github.run_attempt }}@localhost:5432/ravenstore_test
+      REDIS_URL: redis://localhost:6379/15
+      RUN_INTEGRATION_TESTS: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install API
+        working-directory: apps/api
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Migrate database
+        working-directory: apps/api
+        run: alembic upgrade head
+      - name: Validate API
+        working-directory: apps/api
+        run: |
+          ruff check app tests
+          pytest -q
+          pip install pip-audit
+          pip-audit .
+      - name: Install and validate bot
+        working-directory: apps/bot
+        run: |
+          pip install -e ".[dev]"
+          ruff check raven_bot tests
+          pytest -q
+
+  nextjs:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [web, storefront]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/${{ matrix.app }}/package-lock.json
+      - name: Install
+        working-directory: apps/${{ matrix.app }}
+        run: npm ci
+      - name: Typecheck
+        working-directory: apps/${{ matrix.app }}
+        run: npm run typecheck
+      - name: Production build
+        working-directory: apps/${{ matrix.app }}
+        run: npm run build
+      - name: Dependency audit
+        working-directory: apps/${{ matrix.app }}
+        run: npm audit --omit=dev --audit-level=high
