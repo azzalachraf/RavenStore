@@ -59,7 +59,7 @@ jobs:
         working-directory: apps/api
         run: |
           ruff check app tests
-          pytest -q
+          pytest -v
           pip install pip-audit
           pip-audit . || true
       - name: Install and validate bot
@@ -67,7 +67,7 @@ jobs:
         run: |
           pip install -e ".[dev]" --quiet
           ruff check raven_bot tests
-          pytest -q
+          pytest -v
 
   nextjs:
     runs-on: ubuntu-latest
@@ -75,6 +75,12 @@ jobs:
       fail-fast: false
       matrix:
         app: [web, storefront]
+    env:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000/api/v1
+      NEXT_PUBLIC_ADMIN_SITE_URL: http://localhost:3020
+      NEXT_PUBLIC_SITE_URL: http://localhost:3021
+      NEXT_PUBLIC_TELEGRAM_BOT_URL: https://t.me/Ravenn_store_bot
+      RAVENSTORE_IMAGE_HOST: tdjfbnbhswipvwjebrbd.supabase.co
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
