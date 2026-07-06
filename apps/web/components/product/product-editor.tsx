@@ -233,30 +233,16 @@ export function ProductEditor({
                       <input type="checkbox" checked={Boolean(draft.unlimited_stock)} onChange={(e) => set("unlimited_stock", e.target.checked)} />
                       Unlimited stock
                     </label>
-                    <select
-                      className="h-10 rounded-md border border-border bg-white/[0.04] px-3 text-sm"
-                      value={draft.delivery_type ?? "license_key"}
-                      onChange={(e) => set("delivery_type", e.target.value)}
-                    >
-                      <option value="account_credentials">Account credentials</option>
-                      <option value="invite_link">Invite link</option>
-                      <option value="license_key">License key</option>
-                      <option value="zip_file">ZIP file</option>
-                      <option value="pdf_file">PDF</option>
-                      <option value="api_generated">API-generated</option>
-                    </select>
-                    <Input placeholder="Tags" value={draft.tags ?? ""} onChange={(e) => set("tags", e.target.value)} />
-                    {draft.delivery_type !== "zip_file" && draft.delivery_type !== "pdf_file" && draft.delivery_type !== "api_generated" && (
-                      <div className="md:col-span-3">
-                        <Textarea
-                          placeholder="Digital Delivery Content (accounts, links, or text keys to copy)"
-                          value={draft.product_metadata?.delivery_content ?? ""}
-                          onChange={(e) => set("product_metadata", { ...(draft.product_metadata ?? {}), delivery_content: e.target.value })}
-                          className="h-24 bg-white/[0.04] border-border text-foreground"
-                        />
-                      </div>
-                    )}
-                  </div>
+                     <Input placeholder="Tags" value={draft.tags ?? ""} onChange={(e) => set("tags", e.target.value)} />
+                     <div className="md:col-span-3">
+                       <Textarea
+                         placeholder="Digital Delivery Content (accounts, links, or text keys to copy)"
+                         value={draft.product_metadata?.delivery_content ?? ""}
+                         onChange={(e) => set("product_metadata", { ...(draft.product_metadata ?? {}), delivery_content: e.target.value })}
+                         className="h-24 bg-white/[0.04] border-border text-foreground"
+                       />
+                     </div>
+                   </div>
                 </Card>
                 <Card
                   className="flex min-h-36 items-center justify-center border-dashed p-4 text-center text-sm text-muted-foreground"
