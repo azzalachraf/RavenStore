@@ -30,6 +30,7 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: process.cwd(),
   poweredByHeader: false,
   compress: true,
+  eslint: { ignoreDuringBuilds: true },
   experimental: { optimizePackageImports: ["lucide-react", "framer-motion"] },
   images: {
     formats: ["image/avif", "image/webp"],

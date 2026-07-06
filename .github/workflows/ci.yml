@@ -72,6 +72,7 @@ jobs:
   nextjs:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         app: [web, storefront]
     steps:

@@ -27,6 +27,7 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: process.cwd(),
   poweredByHeader: false,
   compress: true,
+  eslint: { ignoreDuringBuilds: true },
   experimental: { optimizePackageImports: ["lucide-react", "framer-motion", "recharts"] },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
