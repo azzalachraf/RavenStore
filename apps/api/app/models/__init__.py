@@ -48,6 +48,8 @@ from app.models.entities import (
     FraudSignal,
     OutboxEvent,
     role_permissions,
+    Wallet,
+    WalletTransaction,
 )
 
 __all__ = [
@@ -100,4 +102,6 @@ __all__ = [
     "FraudSignal",
     "OutboxEvent",
     "role_permissions",
+    "Wallet",
+    "WalletTransaction",
 ]

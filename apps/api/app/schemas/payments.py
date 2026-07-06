@@ -84,3 +84,14 @@ class TransactionOut(TimestampedOut):
     network: str
     confirmations: int
     status: str
+
+
+class WalletAdjustmentPayload(APIModel):
+    amount: Decimal
+    description: str | None = None
+
+
+class WalletTopupRequest(APIModel):
+    amount: Decimal
+    method: str = Field(min_length=2, max_length=64, pattern="^[a-z0-9_]+$")
+

@@ -1,7 +1,6 @@
-from __future__ import annotations
-
+from uuid import UUID
 from aiogram import F, Router
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from raven_bot.api.client import RavenAPI
 from raven_bot.config import settings
@@ -18,7 +17,7 @@ router = Router()
 async def orders(callback: CallbackQuery, api: RavenAPI, bot_session: BotSession, t) -> None:
     status = callback.data.split(":", 1)[1]
     rows = await api.orders(bot_session.access_token, None if status == "all" else status)
-    await respond(callback, orders_text(rows, t), orders_keyboard(t))
+    await respond(callback, orders_text(rows, t), orders_keyboard(rows, t))
 
 
 @router.callback_query(F.data == cb.REFERRAL)
@@ -47,4 +46,31 @@ async def regenerate_api_key(callback: CallbackQuery, api: RavenAPI, bot_session
     raw_key = data.get("api_key")
     prefix = data.get("name")
     await respond(callback, reseller_text(raw_key, prefix, t), reseller_keyboard(t))
+
+
+@router.callback_query(F.data.startswith("order_detail:"))
+async def order_detail(callback: CallbackQuery, api: RavenAPI, bot_session: BotSession, t) -> None:
+    order_id = callback.data.split(":", 1)[1]
+    deliveries = await api.order_deliveries(bot_session.access_token, UUID(order_id))
+
+    lines = [f"<b>📦 Order Details</b>\n"]
+    if not deliveries:
+        lines.append("No items or deliveries found for this order.")
+    else:
+        for idx, d in enumerate(deliveries, 1):
+            status = d.get("status")
+            payload = d.get("delivery")
+            lines.append(f"<b>Item #{idx} Status:</b> {status.capitalize()}")
+            if status == "completed" and payload:
+                lines.append(f"🔑 <b>Delivery Content (tap to copy):</b>\n<code>{payload}</code>")
+            elif status in {"pending", "queued", "processing"}:
+                lines.append("⏳ <i>Delivery is being processed, please wait...</i>")
+            else:
+                lines.append("❌ <i>Delivery failed or is under review.</i>")
+            lines.append("")
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=t("back"), callback_data=f"{cb.ORDERS}:all")]
+    ])
+    await respond(callback, "\n".join(lines).strip(), keyboard)
 

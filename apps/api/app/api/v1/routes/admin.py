@@ -35,9 +35,12 @@ from app.models import (
     Transaction,
     User,
     WebhookLog,
+    Wallet,
+    WalletTransaction,
 )
 from app.schemas.automation import InventoryAdjustment, InventoryAssetUpload, InventoryPoolCreate, ManualPaymentApproval, ManualPaymentRejection
 from app.schemas.catalog import ProductOut
+from app.schemas.payments import WalletAdjustmentPayload
 from app.services.audit import AuditService
 from app.services.inventory import ASSET_DELIVERY_TYPES, InventoryService
 from app.services.catalog import CatalogService
@@ -55,7 +58,31 @@ async def products(
     session: AsyncSession = Depends(db_session),
     _=Depends(require_roles("Owner", "Admin", "Moderator", "Support")),
 ):
-    return await CatalogService(session).products(public_only=False, limit=500)
+    products_list = await CatalogService(session).products(public_only=False, limit=500)
+    output = []
+    for p in products_list:
+        meta = {**p.product_metadata}
+        encrypted = meta.get("delivery_content_encrypted")
+        if encrypted:
+            try:
+                meta["delivery_content"] = cipher.decrypt(encrypted)
+            except Exception:
+                meta["delivery_content"] = ""
+        output.append({
+            "id": p.id,
+            "category_id": p.category_id,
+            "slug": p.slug,
+            "name_key": p.name_key,
+            "description_key": p.description_key,
+            "status": p.status,
+            "brand": p.brand,
+            "product_metadata": meta,
+            "variants": p.variants,
+            "images": p.images,
+            "created_at": p.created_at,
+            "updated_at": p.updated_at,
+        })
+    return output
 
 
 @router.patch("/variants/{variant_id}/inventory")
@@ -348,7 +375,12 @@ async def users(
     session: AsyncSession = Depends(db_session),
     _=Depends(require_roles("Owner", "Admin", "Support")),
 ):
-    result = await session.scalars(select(User).order_by(User.created_at.desc()).limit(200))
+    result = await session.execute(
+        select(User, Wallet.balance)
+        .outerjoin(Wallet, Wallet.user_id == User.id)
+        .order_by(User.created_at.desc())
+        .limit(200)
+    )
     return [
         {
             "id": str(user.id),
@@ -359,9 +391,37 @@ async def users(
             "locale": user.locale,
             "last_login_at": user.last_login_at,
             "created_at": user.created_at,
+            "wallet_balance": float(balance) if balance is not None else 0.0,
         }
-        for user in result.all()
+        for user, balance in result.all()
     ]
+
+
+@router.post("/users/{user_id}/wallet/adjust")
+async def adjust_user_wallet(
+    user_id: UUID,
+    payload: WalletAdjustmentPayload,
+    session: AsyncSession = Depends(db_session),
+    admin: User = Depends(require_roles("Owner", "Admin")),
+):
+    wallet_rec = await session.scalar(
+        select(Wallet).where(Wallet.user_id == user_id).with_for_update()
+    )
+    if wallet_rec is None:
+        wallet_rec = Wallet(user_id=user_id, balance=Decimal("0.00"))
+        session.add(wallet_rec)
+        await session.flush()
+
+    wallet_rec.balance += payload.amount
+    wallet_tx = WalletTransaction(
+        wallet_id=wallet_rec.id,
+        amount=payload.amount,
+        type="admin_adjustment",
+        description=payload.description or f"Admin adjustment by user {admin.email}",
+    )
+    session.add(wallet_tx)
+    await session.commit()
+    return {"user_id": str(user_id), "wallet_balance": float(wallet_rec.balance)}
 
 
 @router.post("/inventory/pools", status_code=201)

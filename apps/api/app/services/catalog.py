@@ -115,6 +115,13 @@ class CatalogService:
         return category
 
     async def create_product(self, payload: ProductCreate, actor_id: UUID | None) -> Product:
+        from app.core.crypto import cipher
+        metadata = {**(payload.product_metadata or {})}
+        delivery_content = metadata.pop("delivery_content", None)
+        if delivery_content:
+            metadata["delivery_content_encrypted"] = cipher.encrypt(str(delivery_content))
+        payload.product_metadata = metadata
+
         product = Product(**payload.model_dump())
         self.session.add(product)
         await self.session.flush()
@@ -129,6 +136,7 @@ class CatalogService:
         return product
 
     async def update_product(self, product_id: UUID, payload: ProductUpdate, actor_id: UUID | None) -> Product:
+        from app.core.crypto import cipher
         product = await self.session.get(Product, product_id, with_for_update=True)
         if product is None:
             raise AppError("products.not_found", status.HTTP_404_NOT_FOUND)
@@ -136,6 +144,17 @@ class CatalogService:
         expected_updated_at = changes.pop("expected_updated_at", None)
         if expected_updated_at and product.updated_at != expected_updated_at:
             raise AppError("products.concurrent_update", status.HTTP_409_CONFLICT)
+        
+        if "product_metadata" in changes and changes["product_metadata"] is not None:
+            metadata = {**changes["product_metadata"]}
+            if "delivery_content" in metadata:
+                delivery_content = metadata.pop("delivery_content", None)
+                if delivery_content:
+                    metadata["delivery_content_encrypted"] = cipher.encrypt(str(delivery_content))
+                else:
+                    metadata.pop("delivery_content_encrypted", None)
+            changes["product_metadata"] = metadata
+
         old_category_id = product.category_id
         for field, value in changes.items():
             setattr(product, field, value)

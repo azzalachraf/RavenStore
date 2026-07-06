@@ -48,11 +48,32 @@ class NotificationWorker:
         locale = user.locale if user else telegram_user.language_code if telegram_user else "en"
         chat_id = telegram_user.telegram_id if telegram_user else settings.telegram_admin_id
         text = f"{translate(notification.title_key, locale)}\n\n{translate(notification.body_key, locale)}"
+
+        if notification.title_key == "notifications.delivery_completed.title":
+            order_id = notification.payload.get("order_id")
+            if order_id:
+                from app.models import DeliveryQueue
+                from app.core.crypto import cipher
+                from uuid import UUID
+                deliveries = await self.session.scalars(
+                    select(DeliveryQueue).where(DeliveryQueue.order_id == UUID(str(order_id)), DeliveryQueue.status == "completed")
+                )
+                payloads = []
+                for d in deliveries.all():
+                    if d.payload_encrypted:
+                        try:
+                            decrypted = cipher.decrypt(d.payload_encrypted)
+                            payloads.append(f"<code>{decrypted}</code>")
+                        except Exception:
+                            pass
+                if payloads:
+                    text += "\n\n🔑 <b>Your Delivery (tap to copy):</b>\n" + "\n".join(payloads)
+
         async def send() -> httpx.Response:
             async with httpx.AsyncClient(timeout=settings.external_http_timeout_seconds) as client:
                 return await client.post(
                     f"https://api.telegram.org/bot{settings.telegram_bot_token}/sendMessage",
-                    json={"chat_id": chat_id, "text": text},
+                    json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
                 )
 
         try:

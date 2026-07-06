@@ -103,6 +103,39 @@ class FulfillmentService:
         item = await self.session.get(OrderItem, delivery.order_item_id)
         if item is None:
             raise ValueError("delivery.order_item_missing")
+
+        if delivery.delivery_type == "wallet_topup":
+            from decimal import Decimal
+            from app.models import Wallet, WalletTransaction
+            order = await self.session.get(Order, delivery.order_id)
+            if order is None:
+                raise ValueError("delivery.order_missing")
+            credit_amount = item.unit_price_amount * item.quantity
+            wallet_result = await self.session.execute(
+                select(Wallet).where(Wallet.user_id == order.user_id).with_for_update()
+            )
+            user_wallet = wallet_result.scalar_one_or_none()
+            if user_wallet is None:
+                user_wallet = Wallet(user_id=order.user_id, balance=Decimal("0.00"))
+                self.session.add(user_wallet)
+                await self.session.flush()
+            user_wallet.balance += credit_amount
+            wallet_tx = WalletTransaction(
+                wallet_id=user_wallet.id,
+                amount=credit_amount,
+                type="top_up",
+                description=f"Wallet top-up via order {order.order_number}",
+                reference_id=order.id
+            )
+            self.session.add(wallet_tx)
+            await self.session.flush()
+            return f"Wallet topped up successfully with {credit_amount} USD. New balance: {user_wallet.balance} USD."
+
+        # Check if we have direct/static delivery content in product metadata
+        variant = await self.session.get(ProductVariant, item.product_variant_id)
+        if variant and variant.product and variant.product.product_metadata.get("delivery_content_encrypted"):
+            return cipher.decrypt(variant.product.product_metadata["delivery_content_encrypted"])
+
         reservation = await self.session.scalar(
             select(InventoryReservation).where(InventoryReservation.order_item_id == item.id)
         )

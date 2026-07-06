@@ -109,6 +109,91 @@ class PaymentService:
             if verification:
                 verification.verification_status = "queued"
                 verification.next_attempt_at = datetime.now(UTC)
+        elif network.provider == "wallet":
+            from app.models import Wallet, WalletTransaction, Transaction
+            wallet_result = await self.session.execute(
+                select(Wallet).where(Wallet.user_id == user_id).with_for_update()
+            )
+            user_wallet = wallet_result.scalar_one_or_none()
+            if user_wallet is None:
+                user_wallet = Wallet(user_id=user_id, balance=Decimal("0.00"))
+                self.session.add(user_wallet)
+                await self.session.flush()
+
+            if user_wallet.balance < order.total_amount:
+                raise AppError("payments.insufficient_wallet_balance", status.HTTP_400_BAD_REQUEST)
+
+            user_wallet.balance -= order.total_amount
+
+            wallet_tx = WalletTransaction(
+                wallet_id=user_wallet.id,
+                amount=-order.total_amount,
+                type="purchase",
+                description=f"Purchase of order {order.order_number}",
+                reference_id=order.id
+            )
+            self.session.add(wallet_tx)
+
+            payment.status = "confirmed"
+            payment.confirmed_at = datetime.now(UTC)
+            payment.expires_at = datetime.now(UTC)
+
+            order.status = "paid"
+
+            verification_result = await self.session.execute(
+                select(PaymentVerification).where(PaymentVerification.payment_id == payment.id).with_for_update()
+            )
+            verification = verification_result.scalar_one_or_none()
+            if verification:
+                verification.verification_status = "confirmed"
+                verification.completed_at = datetime.now(UTC)
+
+            transaction = Transaction(
+                payment_id=payment.id,
+                tx_hash=reference,
+                reference_hash=hash_secret(reference),
+                amount=order.total_amount,
+                currency="USD",
+                network="WALLET",
+                confirmations=1,
+                status="confirmed",
+                raw_payload={"source": "wallet"},
+            )
+            self.session.add(transaction)
+            await self.session.flush()
+
+            from app.services.inventory import InventoryService
+            await InventoryService(self.session).commit_for_order(order.id)
+
+            await self.ledger.ensure_receipt(payment, transaction)
+            await self.ledger.ensure_invoice(order)
+
+            from app.services.fulfillment import FulfillmentService
+            await FulfillmentService(self.session).enqueue_paid_order(order)
+
+            self.outbox.add(
+                aggregate_type="order",
+                aggregate_id=order.id,
+                event_type="order.status_changed",
+                payload={"order_id": str(order.id), "user_id": str(order.user_id), "status": order.status},
+            )
+            self.outbox.add(
+                aggregate_type="payment",
+                aggregate_id=payment.id,
+                event_type="payment.confirmed",
+                payload={"payment_id": str(payment.id), "order_id": str(order.id), "user_id": str(order.user_id)},
+            )
+
+            self.audit.log(
+                actor_user_id=user_id,
+                action="payment.wallet_checkout",
+                resource_type="order",
+                resource_id=order.id,
+                metadata={"amount": str(order.total_amount), "wallet_id": str(user_wallet.id)}
+            )
+
+            await self.session.commit()
+            return payment, token, reference
         else:
             payment.provider_order_id_encrypted = None
             payment.payment_url = None

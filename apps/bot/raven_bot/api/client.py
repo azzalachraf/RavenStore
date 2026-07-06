@@ -214,6 +214,10 @@ class RavenAPI:
         data = await self._request("GET", "/orders", params=params, token=token)
         return [Order.model_validate(item) for item in data]
 
+    async def order_deliveries(self, token: str | None, order_id: UUID) -> list[dict[str, Any]]:
+        self._require_token(token)
+        return await self._request("GET", f"/orders/{order_id}/deliveries", token=token)
+
     async def request_payment(self, token: str | None, order_id: UUID, method: str) -> PaymentCreated:
         self._require_token(token)
         data = await self._request(

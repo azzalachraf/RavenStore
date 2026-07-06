@@ -78,6 +78,7 @@ export type User = {
   status: string;
   locale: string;
   created_at?: string;
+  wallet_balance?: number;
 };
 
 export type ActivityLog = {

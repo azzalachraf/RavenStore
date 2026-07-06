@@ -76,6 +76,10 @@ export class RavenApiClient {
     return this.request<User[]>("/admin/users");
   }
 
+  async adjustWallet(userId: string, payload: { amount: number; description?: string }) {
+    return this.request(`/admin/users/${userId}/wallet/adjust`, { method: "POST", body: payload, idempotent: true });
+  }
+
   async activity() {
     return this.request<ActivityLog[]>("/admin/activity");
   }

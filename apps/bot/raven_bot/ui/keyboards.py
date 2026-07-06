@@ -6,7 +6,7 @@ from uuid import UUID
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from raven_bot.domain import Category, Product
+from raven_bot.domain import Category, Product, Order, ProductVariant
 from raven_bot.runtime.navigation import navigation_cache
 from raven_bot.ui import callbacks as cb
 from raven_bot.ui.formatters import primary_variant
@@ -114,8 +114,14 @@ def submit_payment_keyboard(payment_token: str, t: T) -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
-def orders_keyboard(t: T) -> InlineKeyboardMarkup:
-    return single_back_keyboard(t)
+def orders_keyboard(orders: list[Order], t: T) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    for order in orders:
+        if order.status in {"completed", "paid", "fulfilled", "fulfilling"}:
+            builder.button(text=f"🔑 View {order.order_number}", callback_data=f"order_detail:{order.id}")
+    builder.button(text=t("back"), callback_data=cb.HOME)
+    builder.adjust(1)
+    return builder.as_markup()
 
 
 def support_keyboard(t: T) -> InlineKeyboardMarkup:

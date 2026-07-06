@@ -88,6 +88,17 @@ class ConfigurationService:
                 "enabled": settings.payment_binance_enabled,
                 "api_key": None,
             },
+            "wallet": {
+                "provider": "wallet",
+                "network": "WALLET",
+                "currency": "USD",
+                "address": None,
+                "contract_address": None,
+                "decimals": 2,
+                "required_confirmations": 1,
+                "enabled": True,
+                "api_key": None,
+            },
         }
         overrides = await self._value(f"payments.methods.{method}")
         if method in defaults:
