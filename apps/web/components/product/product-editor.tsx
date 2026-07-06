@@ -41,6 +41,7 @@ export function ProductEditor({
 }) {
   const { success, error } = useToast();
   const [draft, setDraft] = React.useState<DraftProduct>({});
+  const [accounts, setAccounts] = React.useState<string[]>([""]);
   const [saving, setSaving] = React.useState(false);
   const [pendingImages, setPendingImages] = React.useState<File[]>([]);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
@@ -48,6 +49,9 @@ export function ProductEditor({
 
   React.useEffect(() => {
     const variant = product?.variants?.[0];
+    const initialAccounts = product?.product_metadata?.delivery_content_list as string[] | undefined;
+    setAccounts(initialAccounts?.length ? initialAccounts : [""]);
+    
     setDraft(
       product
         ? {
@@ -56,23 +60,19 @@ export function ProductEditor({
             description: product.description_key ?? "",
             price: variant?.price_amount ?? "",
             duration_days: variant?.duration_days ? String(variant.duration_days) : "",
-            delivery_type: variant?.delivery_type ?? "license_key",
+            delivery_type: variant?.delivery_type ?? "account_credentials",
             warranty_days: String(product.product_metadata?.warranty_days ?? ""),
-            stock: variant?.stock_available == null ? "" : String(variant.stock_available),
-            unlimited_stock: variant?.unlimited_stock ?? false,
             tags: Array.isArray(product.product_metadata?.tags) ? (product.product_metadata.tags as string[]).join(", ") : ""
           }
         : {
             slug: "",
             title: "",
             description: "",
-            status: "draft",
-            delivery_type: "license_key",
+            status: "active",
+            delivery_type: "account_credentials",
             price: "",
             duration_days: "",
             warranty_days: "",
-            stock: "",
-            unlimited_stock: false,
             tags: "",
             images: []
           }
@@ -84,17 +84,19 @@ export function ProductEditor({
     setSaving(true);
     try {
       const category = draft.category_id ?? categories[0]?.id;
+      const activeAccounts = accounts.filter(acc => acc.trim() !== "");
       const payload = {
         expected_updated_at: product?.updated_at,
         category_id: category,
         slug: draft.slug || stableId("product"),
         name_key: draft.title || "products.untitled",
         description_key: draft.description || null,
-        status: draft.status ?? "draft",
+        status: "active",
         brand: draft.brand ?? null,
         product_metadata: {
           ...(draft.product_metadata ?? {}),
           warranty_days: Number(draft.warranty_days || 0),
+          delivery_content_list: activeAccounts,
           tags: draft.tags?.split(",").map((tag) => tag.trim()).filter(Boolean) ?? []
         }
       };
@@ -106,7 +108,7 @@ export function ProductEditor({
           name_key: `${payload.name_key}.default`,
           duration_days: Number(draft.duration_days || 0) || null,
           region: "global",
-          delivery_type: draft.delivery_type || "license_key",
+          delivery_type: draft.delivery_type || "account_credentials",
           price_amount: Number(draft.price || 0),
           cost_amount: 0,
           currency: "USD",
@@ -128,8 +130,8 @@ export function ProductEditor({
       }
       if (variant) {
         await ravenApi.updateInventory(variant.id, {
-          quantity_available: Number(draft.stock || 0),
-          unlimited_stock: Boolean(draft.unlimited_stock),
+          quantity_available: activeAccounts.length,
+          unlimited_stock: activeAccounts.length === 0,
           low_stock_threshold: 5
         });
       }
@@ -146,7 +148,15 @@ export function ProductEditor({
     }
   };
 
-  const set = <K extends keyof DraftProduct>(key: K, value: DraftProduct[K]) => setDraft((current) => ({ ...current, [key]: value }));
+  const slugify = (text: string) => text.toLowerCase().trim().replace(/[^\w\s-]/g, "").replace(/[\s_-]+/g, "-").replace(/^-+|-+$/g, "");
+  const set = <K extends keyof DraftProduct>(key: K, value: DraftProduct[K]) => {
+    setDraft((current) => {
+      if (key === "title") {
+        return { ...current, title: value, slug: slugify(String(value)) };
+      }
+      return { ...current, [key]: value };
+    });
+  };
   const addImages = (files: FileList | File[]) => {
     const images = Array.from(files).filter((file) => ["image/jpeg", "image/png", "image/webp"].includes(file.type));
     setPendingImages((current) => [...current, ...images].slice(0, 12));
@@ -192,31 +202,10 @@ export function ProductEditor({
               <div className="space-y-4">
                 <Card className="p-4">
                   <div className="grid gap-3 md:grid-cols-2">
-                    <Input placeholder="Title translation key" value={draft.title ?? ""} onChange={(e) => set("title", e.target.value)} />
-                    <Input placeholder="Slug" value={draft.slug ?? ""} onChange={(e) => set("slug", e.target.value)} />
-                    <select
-                      className="h-10 rounded-md border border-border bg-white/[0.04] px-3 text-sm"
-                      value={draft.category_id ?? ""}
-                      onChange={(e) => set("category_id", e.target.value)}
-                    >
-                      {categories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name_key}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      className="h-10 rounded-md border border-border bg-white/[0.04] px-3 text-sm"
-                      value={draft.status ?? "draft"}
-                      onChange={(e) => set("status", e.target.value)}
-                    >
-                      <option value="draft">Draft</option>
-                      <option value="active">Visible</option>
-                      <option value="archived">Hidden</option>
-                    </select>
+                    <Input placeholder="Name" value={draft.title ?? ""} onChange={(e) => set("title", e.target.value)} />
                     <Textarea
                       className="md:col-span-2"
-                      placeholder="Description translation key"
+                      placeholder="Description"
                       value={draft.description ?? ""}
                       onChange={(e) => set("description", e.target.value)}
                     />
@@ -228,21 +217,46 @@ export function ProductEditor({
                     <Input placeholder="Price" value={draft.price ?? ""} onChange={(e) => set("price", e.target.value)} />
                     <Input placeholder="Duration days" value={draft.duration_days ?? ""} onChange={(e) => set("duration_days", e.target.value)} />
                     <Input placeholder="Warranty days" value={draft.warranty_days ?? ""} onChange={(e) => set("warranty_days", e.target.value)} />
-                    <Input placeholder="Stock" value={draft.stock ?? ""} onChange={(e) => set("stock", e.target.value)} />
-                    <label className="flex h-10 items-center gap-2 rounded-md border border-border px-3 text-sm">
-                      <input type="checkbox" checked={Boolean(draft.unlimited_stock)} onChange={(e) => set("unlimited_stock", e.target.checked)} />
-                      Unlimited stock
-                    </label>
-                     <Input placeholder="Tags" value={draft.tags ?? ""} onChange={(e) => set("tags", e.target.value)} />
-                     <div className="md:col-span-3">
-                       <Textarea
-                         placeholder="Digital Delivery Content (accounts, links, or text keys to copy)"
-                         value={draft.product_metadata?.delivery_content ?? ""}
-                         onChange={(e) => set("product_metadata", { ...(draft.product_metadata ?? {}), delivery_content: e.target.value })}
-                         className="h-24 bg-white/[0.04] border-border text-foreground"
-                       />
-                     </div>
-                   </div>
+                    <Input placeholder="Tags" value={draft.tags ?? ""} onChange={(e) => set("tags", e.target.value)} />
+                    <div className="md:col-span-3">
+                      <div className="mb-2 text-sm font-medium">Digital Delivery Content</div>
+                      {accounts.map((acc, index) => (
+                        <div key={index} className="flex gap-2 mb-2 items-center">
+                          <Input
+                            placeholder={`Account #${index + 1} (e.g. user:pass or link)`}
+                            value={acc}
+                            onChange={(e) => {
+                              const newAccs = [...accounts];
+                              newAccs[index] = e.target.value;
+                              setAccounts(newAccs);
+                            }}
+                            className="flex-1"
+                          />
+                          {accounts.length > 1 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-500 hover:text-red-700"
+                              onClick={() => {
+                                setAccounts(accounts.filter((_, i) => i !== index));
+                              }}
+                            >
+                              Remove
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        className="mt-2 text-xs"
+                        onClick={() => setAccounts([...accounts, ""])}
+                      >
+                        + Add a new line
+                      </Button>
+                    </div>
+                  </div>
                 </Card>
                 <Card
                   className="flex min-h-36 items-center justify-center border-dashed p-4 text-center text-sm text-muted-foreground"

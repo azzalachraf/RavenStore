@@ -68,6 +68,17 @@ async def products(
                 meta["delivery_content"] = cipher.decrypt(encrypted)
             except Exception:
                 meta["delivery_content"] = ""
+        
+        encrypted_list = meta.get("delivery_content_list_encrypted")
+        if isinstance(encrypted_list, list):
+            decrypted_list = []
+            for item in encrypted_list:
+                try:
+                    decrypted_list.append(cipher.decrypt(item))
+                except Exception:
+                    pass
+            meta["delivery_content_list"] = decrypted_list
+
         output.append({
             "id": p.id,
             "category_id": p.category_id,

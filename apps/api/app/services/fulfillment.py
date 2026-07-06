@@ -133,8 +133,32 @@ class FulfillmentService:
 
         # Check if we have direct/static delivery content in product metadata
         variant = await self.session.get(ProductVariant, item.product_variant_id)
-        if variant and variant.product and variant.product.product_metadata.get("delivery_content_encrypted"):
-            return cipher.decrypt(variant.product.product_metadata["delivery_content_encrypted"])
+        if variant and variant.product:
+            # Priority 1: Queue of encrypted accounts
+            encrypted_list = variant.product.product_metadata.get("delivery_content_list_encrypted")
+            if isinstance(encrypted_list, list) and encrypted_list:
+                first_encrypted = encrypted_list.pop(0)
+                # Assign a copy back to trigger SQLAlchemy change tracking
+                variant.product.product_metadata = {
+                    **variant.product.product_metadata,
+                    "delivery_content_list_encrypted": encrypted_list
+                }
+                
+                from app.models import Inventory
+                db_inventory = await self.session.scalar(
+                    select(Inventory).where(Inventory.product_variant_id == variant.id).with_for_update()
+                )
+                if db_inventory:
+                    db_inventory.quantity_available = len(encrypted_list)
+                    from sqlalchemy.orm.attributes import flag_modified
+                    flag_modified(db_inventory)
+                
+                await self.session.flush()
+                return cipher.decrypt(first_encrypted)
+
+            # Priority 2: Static text
+            if variant.product.product_metadata.get("delivery_content_encrypted"):
+                return cipher.decrypt(variant.product.product_metadata["delivery_content_encrypted"])
 
         reservation = await self.session.scalar(
             select(InventoryReservation).where(InventoryReservation.order_item_id == item.id)

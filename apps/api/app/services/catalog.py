@@ -120,6 +120,12 @@ class CatalogService:
         delivery_content = metadata.pop("delivery_content", None)
         if delivery_content:
             metadata["delivery_content_encrypted"] = cipher.encrypt(str(delivery_content))
+        
+        delivery_list = metadata.pop("delivery_content_list", None)
+        if isinstance(delivery_list, list):
+            metadata["delivery_content_list_encrypted"] = [
+                cipher.encrypt(str(item)) for item in delivery_list if str(item).strip()
+            ]
         payload.product_metadata = metadata
 
         product = Product(**payload.model_dump())
@@ -153,6 +159,15 @@ class CatalogService:
                     metadata["delivery_content_encrypted"] = cipher.encrypt(str(delivery_content))
                 else:
                     metadata.pop("delivery_content_encrypted", None)
+            
+            if "delivery_content_list" in metadata:
+                delivery_list = metadata.pop("delivery_content_list", None)
+                if isinstance(delivery_list, list):
+                    metadata["delivery_content_list_encrypted"] = [
+                        cipher.encrypt(str(item)) for item in delivery_list if str(item).strip()
+                    ]
+                else:
+                    metadata.pop("delivery_content_list_encrypted", None)
             changes["product_metadata"] = metadata
 
         old_category_id = product.category_id
