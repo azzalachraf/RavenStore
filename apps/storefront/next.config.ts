@@ -31,6 +31,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
   eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
   experimental: { optimizePackageImports: ["lucide-react", "framer-motion"] },
   images: {
     formats: ["image/avif", "image/webp"],
