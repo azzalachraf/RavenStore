@@ -59,7 +59,7 @@ jobs:
         working-directory: apps/api
         run: |
           ruff check app tests
-          pytest -v
+          pytest -v > pytest_output.log 2>&1 || (cat pytest_output.log | while read line; do echo "::error::$line"; done && exit 1)
           pip install pip-audit
           pip-audit . || true
       - name: Install and validate bot
@@ -67,7 +67,7 @@ jobs:
         run: |
           pip install -e ".[dev]" --quiet
           ruff check raven_bot tests
-          pytest -v
+          pytest -v > pytest_bot_output.log 2>&1 || (cat pytest_bot_output.log | while read line; do echo "::error::$line"; done && exit 1)
 
   nextjs:
     runs-on: ubuntu-latest
@@ -96,7 +96,7 @@ jobs:
         run: npm run typecheck
       - name: Production build
         working-directory: apps/${{ matrix.app }}
-        run: npm run build
+        run: npm run build > build_output.log 2>&1 || (cat build_output.log | while read line; do echo "::error::$line"; done && exit 1)
       - name: Dependency audit
         working-directory: apps/${{ matrix.app }}
         run: npm audit --omit=dev --audit-level=high || true
