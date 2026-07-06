@@ -233,9 +233,24 @@ class Settings(BaseSettings):
 
     @cached_property
     def backend_cors_origins(self) -> list[str]:
-        if not self.backend_cors_origins_raw:
-            return []
-        return [origin.strip() for origin in self.backend_cors_origins_raw.split(",") if origin.strip()]
+        origins = []
+        if self.backend_cors_origins_raw:
+            origins = [origin.strip() for origin in self.backend_cors_origins_raw.split(",") if origin.strip()]
+        
+        # Always inject essential origins to prevent CORS lockouts if environment variables are missing
+        essential = [
+            "http://localhost:3000",
+            "http://localhost:3020",
+            "http://localhost:3021",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:3020",
+            "http://127.0.0.1:3021",
+            "https://raven-store-admin-azure.vercel.app"
+        ]
+        for origin in essential:
+            if origin not in origins:
+                origins.append(origin)
+        return origins
 
     @cached_property
     def trusted_proxy_cidrs(self) -> list[str]:

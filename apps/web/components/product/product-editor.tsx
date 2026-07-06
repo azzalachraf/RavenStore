@@ -84,6 +84,11 @@ export function ProductEditor({
     setSaving(true);
     try {
       const category = draft.category_id ?? categories[0]?.id;
+      if (!category) {
+        error("Missing Category", "You must create at least one category before adding products.");
+        setSaving(false);
+        return;
+      }
       const activeAccounts = accounts.filter(acc => acc.trim() !== "");
       const payload = {
         expected_updated_at: product?.updated_at,
@@ -141,8 +146,14 @@ export function ProductEditor({
       success("Product synchronized", "Telegram and website clients will read the updated API state.");
       onSaved();
       onOpenChange(false);
-    } catch (reason) {
-      error("Product could not be saved", reason instanceof Error ? reason.message : "Check the API response and try again.");
+    } catch (reason: any) {
+      let msg = "Check the API response and try again.";
+      if (reason?.messageKey) {
+        msg = typeof reason.messageKey === "string" ? reason.messageKey : JSON.stringify(reason.messageKey);
+      } else if (reason instanceof Error) {
+        msg = reason.message;
+      }
+      error("Product could not be saved", msg);
     } finally {
       setSaving(false);
     }
